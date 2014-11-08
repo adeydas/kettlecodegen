@@ -1,0 +1,45 @@
+<project name="kettlestepboilerplatecodegen" default="default"
+	basedir=".">
+	<description>
+		Boiler plate code generator for Kettle step
+	</description>
+
+	<!-- Global build properties -->
+	<property name="src" location="src" />
+	<property name="classes" location="classes" />
+	<property name="lib" location="lib" />
+	<property name="deploydir" location="deploy" />
+
+	<target name="init" description="Create dirs">
+		<echo>Init....</echo>
+
+		<tstamp />
+		<mkdir dir="${classes}" />
+		<mkdir dir="${deploydir}" />
+	</target>
+
+	<target name="compile" description="Compile code">
+		<echo>Compile....</echo>
+
+		<javac srcdir="${src}" destdir="${classes}" source="1.7" target="1.7"
+			debug="true">
+
+			<classpath id="cpath">
+				<fileset dir="${lib}" includes="*.jar" />
+			</classpath>
+		</javac>
+	</target>
+	
+	<target name="distrib" depends="compile" description="Create the distribution package..." >
+        <echo>Copying libraries to deploy directory...</echo>
+        <copy todir="${deploydir}">
+            <fileset
+                    dir="${lib}"
+                    includes="**/*.jar"/>
+        </copy>
+    </target>
+    
+    <target name="clean"  description="clean up generated files" >
+        <delete dir="${classes}"/>
+    </target>
+</project>
