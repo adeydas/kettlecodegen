@@ -24,6 +24,106 @@ public class Generator {
 		createMessageClass();
 		createMessageProperties();
 		createMetaClass();
+		createDataClass();
+		createMainClass();
+	}
+	
+	//Create Main class
+	private void createMainClass() throws Exception {
+		PrintWriter out = new PrintWriter(new File(this.packagePath
+				+ File.separator + dt.getLibraryname() + ".java"));
+
+		out.println("package " + dt.getPackagename() + ";");
+		
+		out.println("public class "+dt.getLibraryname()+" extends BaseStep implements StepInterface {");
+		out.println("private "+dt.getLibraryname()+"Data data;");
+		out.println("private "+dt.getLibraryname()+"Meta meta;");
+		
+		out.println();
+		
+		out.println("public "+dt.getLibraryname()+"(StepMeta stepMeta, StepDataInterface stepDataInterface, int copyNr, TransMeta transMeta, Trans trans) {");
+		out.println("\tsuper(stepMeta, stepDataInterface, copyNr, transMeta, trans);");
+		out.println("}");
+		
+		out.println();
+		
+		out.println("public synchronized boolean processRow(StepMetaInterface smi, StepDataInterface sdi) throws KettleException {");
+		
+		out.println("\tmeta = ("+dt.getLibraryname()+"Meta) smi;");
+		out.println("\tdata = ("+dt.getLibraryname()+"Data) sdi;");
+		out.println();
+		out.println("\tObject[] r = getRow();");
+		out.println("\tif (r == null) {");
+		out.println("\t\t//No more rows left");
+		out.println("\t\tsetOutputDone();");
+		out.println("\t\treturn false;");
+		out.println("\t}");
+		out.println();
+		out.println("\tif (first) {");
+		out.println("\t\tfirst = false;");
+		out.println("\t\t//Good place to set the meta fields");
+		out.println("\t}");
+		out.println("\treturn true;");
+		out.println("}");
+		
+		out.println();
+		
+		out.println("public boolean init(StepMetaInterface smi, StepDataInterface sdi) {");
+		out.println("\tmeta = ("+dt.getLibraryname()+"Meta) smi;");
+		out.println("\tdata = ("+dt.getLibraryname()+"Data) sdi;");
+		out.println("\t//All initialization code goes here");
+		out.println("return super.init(smi, sdi);");
+		out.println("}");
+		
+		out.println();
+		
+		out.println("public void dispose(StepMetaInterface smi, StepDataInterface sdi) {");
+		out.println("\tmeta = ("+dt.getLibraryname()+"Meta) smi;");
+		out.println("\tdata = ("+dt.getLibraryname()+"Data) sdi;");
+		out.println("\tsuper.dispose(smi, sdi);");
+		out.println("}");
+		
+		out.println();
+		
+		out.println("public void run() {");
+		out.println("\ttry {");
+		out.println("\twhile (processRow(meta, data) && !isStopped());");
+		out.println("\t} catch (Exception e) {");
+		out.println("\tlogError(Const.getStackTracker(e));");
+		out.println("\tsetErrors(1);");
+		out.println("\tstopAll();");
+		out.println("\t} finally {");
+		out.println("\tdispose(meta, data);");
+		out.println("\tmarkStop();");
+		out.println("\t}");
+		out.println("}");
+		
+		
+		
+		out.println("}");
+		
+		out.close();
+	}
+	
+	//Create Data class
+	private void createDataClass() throws Exception {
+		PrintWriter out = new PrintWriter(new File(this.packagePath
+				+ File.separator + dt.getLibraryname() + "Data.java"));
+
+		out.println("package " + dt.getPackagename() + ";");
+		
+		out.println("public class "+dt.getLibraryname()+"Data extends BaseStepData implements StepDataInterface {");
+		out.println("//All intermitent data for the step goes here");
+		
+		out.println("public "+dt.getLibraryname()+"Data() {");
+		out.println("\tsuper();");
+		out.println("}");
+		
+		
+		out.println("}");
+		
+		
+		out.close();
 	}
 
 	// Create Meta class
