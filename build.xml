@@ -43,7 +43,7 @@
 		
 		
 		
-		<jar destfile="deploy/kettlestepcodegen.jar">
+		<jar destfile="${deploydir}/kettlestepcodegen.jar">
 			
 			<fileset dir="lib/" includes="**/*.jar" />
 			<fileset dir="${classes}" includes="**/*.class" />
