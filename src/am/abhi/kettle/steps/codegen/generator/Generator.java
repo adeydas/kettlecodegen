@@ -351,10 +351,12 @@ public class Generator {
 
 		out.println("package " + dt.getPackagename() + ";");
 
-		out.println("private " + dt.getLibraryname() + "Meta input;");
+		
 
 		out.println("public class " + dt.getLibraryname() + "Dialog"
 				+ " extends BaseStepDialog implements StepDialogInterface {");
+		
+		out.println("private " + dt.getLibraryname() + "Meta input;");
 
 		String dialogElements = dt.getDialogelements();
 		if (!dialogElements.contains(",")) {
@@ -553,7 +555,9 @@ public class Generator {
 		out.println("\tprivate void ok() {");
 		out.println("\t\tstepname = wStepname.getText(); // return value");
 		out.println("\t\tif (Const.isEmpty(stepname)) return;");
-		out.println("\t\tPopulate UI variables in meta here");
+		out.println("\t\t//Populate UI variables in meta here");
+		out.println("}");
+		
 		out.println("}");
 
 		out.close();
@@ -572,7 +576,7 @@ public class Generator {
 		out.println("\ttooltip=\"" + dt.getDescription() + "\"");
 		out.println("\tcategory=\"" + dt.getCategory() + "\"");
 		out.println("\tclassname=\"" + dt.getPackagename() + "."
-				+ dt.getStepname().trim() + "Meta" + "\">");
+				+ dt.getLibraryname() + "Meta" + "\">");
 		out.println("\t<libraries>");
 		out.println("\t\t<library name=\"" + dt.getLibraryname() + ".jar\"/>");
 		out.println("\t</libraries>");
