@@ -156,7 +156,7 @@ public class FrontScreen {
 		//Step GUI elements
 		data = new GridData(SWT.FILL, SWT.TOP, true, false, 2, 1);
 		Label lDialogElement = new Label(shell, SWT.LEFT | SWT.BORDER);
-		lDialogElement.setText("Dialog UI elements for the plugin dialog in the format <Label_Text>,<SWT_WidgetType>;<Label_Text>,<SWT_WidgetType>....");
+		lDialogElement.setText("Dialog UI elements for the plugin dialog in the format <Variable_Name>,<Label_Text>,<SWT_WidgetType>;<Variable_Name>,<Label_Text>,<SWT_WidgetType>....");
 		lDialogElement.setLayoutData(data);
 		data.heightHint = 50;
 		

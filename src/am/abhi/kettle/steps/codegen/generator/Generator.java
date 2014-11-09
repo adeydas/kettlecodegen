@@ -20,45 +20,319 @@ public class Generator {
 		createBuildXml();
 		createStepAttributes();
 		createPluginXml();
+		createDialogClass();
+		createMessageClass();
+		createMessageProperties();
+	}
+
+	// Create Message class
+	private void createMessageClass() throws Exception {
+		PrintWriter out = new PrintWriter(new File(this.packagePath
+				+ File.separator + "Messages.java"));
+		out.println("import org.pentaho.di.i18n.BaseMessages;");
+		out.println("public class Messages {");
+		out.println("\tpublic static final String packageName = Messages.class.getPackage().getName();");
+
+		out.println("\tpublic static String getString(String key) {");
+		out.println("\t\treturn BaseMessages.getString(packageName, key);");
+		out.println("\t}");
+
+		out.println("\tpublic static String getString(String key, String param1) {");
+		out.println("\t\treturn BaseMessages.getString(packageName, key, param1);");
+		out.println("\t}");
+
+		out.println("\tpublic static String getString(String key, String param1, String param2) {");
+		out.println("\t\treturn BaseMessages.getString(packageName, key, param1, param2);");
+		out.println("\t}");
+
+		out.println("\tpublic static String getString(String key, String param1, String param2, String param3) {");
+		out.println("\t\treturn BaseMessages.getString(packageName, key, param1, param2, param3);");
+		out.println("\t}");
+
+		out.println("\tpublic static String getString(String key, String param1, String param2, String param3, String param4) {");
+		out.println("\t\treturn BaseMessages.getString(packageName, key, param1, param2, param3, param4);");
+		out.println("\t}");
+
+		out.println("\tpublic static String getString(String key, String param1, String param2, String param3, String param4, String param5) {");
+		out.println("\t\treturn BaseMessages.getString(packageName, key, param1, param2, param3, param4, param5);");
+		out.println("\t}");
+
+		out.println("\tpublic static String getString(String key, String param1, String param2, String param3, String param4, String param5, String param6) {");
+		out.println("\t\treturn BaseMessages.getString(packageName, key, param1, param2, param3, param4, param5, param6);");
+		out.println("\t}");
+
+		out.println("}");
+		out.close();
 	}
 	
-	//Create Dialog class
+	//Create Message properties
+	private void createMessageProperties() throws Exception {
+		File messagesDir = new File(this.packagePath + File.separator + "messages");
+		if (!messagesDir.mkdir()) {
+			throw new Exception("Could not create messages dir");
+		}
+		
+		PrintWriter out = new PrintWriter(new File(this.packagePath + File.separator + "messages" + File.separator + "messages_en_US.properties"));
+		out.println(dt.getStepname().trim() + ".Shell.Title=" + dt.getStepname());
+		out.println(dt.getStepname().trim() + ".Stepname.Title= Stepname");
+		
+		String dialogElements = dt.getDialogelements();
+		if (!dialogElements.contains(",")) {
+			throw new Exception("Invalid format of dialog elements");
+		}
+		
+		String[] de = dialogElements.split(";");
+		
+		for (String d : de) {
+			String[] ds = d.split(",");
+			String variableName = ds[0];
+			String labelText = ds[1];
+			String widgetType = ds[2];
+			
+			
+			out.println(dt.getStepname().trim() + "." + variableName + ".Title = " + labelText);
+			
+		}
+		out.close();
+	}
+
+	// Create Dialog class
 	private void createDialogClass() throws Exception {
+		PrintWriter out = new PrintWriter(new File(this.packagePath
+				+ File.separator + dt.getLibraryname() + "Dialog.java"));
+
+		out.println("package " + dt.getPackagename());
+
+		out.println("private " + dt.getLibraryname() + "Meta input;");
+
+		out.println("public class " + dt.getLibraryname() + "Dialog"
+				+ " extends BaseStepDialog implements StepDialogInterface {");
 		
+		String dialogElements = dt.getDialogelements();
+		if (!dialogElements.contains(",")) {
+			throw new Exception("Invalid format of dialog elements");
+		}
+		
+		String[] de = dialogElements.split(";");
+		
+		for (String d : de) {
+			String[] ds = d.split(",");
+			String variableName = ds[0];
+			String labelText = ds[1];
+			String widgetType = ds[2];
+			
+			
+			out.println("private Label wl" + variableName + ";");
+			out.println("private " + widgetType + " w" + variableName);
+			out.println("private FormData fdl" + variableName + ", fd" + variableName);
+		}
+
+		// Generate the constructor
+		out.println("\tpublic "
+				+ dt.getLibraryname()
+				+ "Dialog(Shell parent, Object baseStepMeta, TransMeta transMeta, String stepname) {");
+		out.println("\t\tsuper(parent, (StepMetaInterface) baseStepMeta, transMeta, stepname);");
+		out.println("\t\tinput = (" + dt.getLibraryname()
+				+ "Meta) baseStepMeta;");
+		out.println("\t}");
+
+		// Generate open()
+		out.println("\t@Override");
+		out.println("\tpublic String open() {");
+		out.println("\t\tShell parent = getParent();");
+		out.println("\t\tDisplay display = parent.getDisplay();");
+		out.println("\t\tshell = new Shell(parent, SWT.DIALOG_TRIM | SWT.RESIZE | SWT.MIN | SWT.MAX);");
+		out.println("\t\tprops.setLook(shell);");
+		out.println("\t\tsetShellImage(shell, input);");
+		out.println();
+		out.println("\t\tModifyListener lsMod = new ModifyListener() {");
+		out.println("\t\t\tpublic void modifyText(ModifyEvent e) {");
+		out.println("\t\t\t\tinput.setChanged();");
+		out.println("\t\t\t}");
+		out.println("\t\t};");
+		out.println("\t\tchanged = input.hasChanged();");
+		out.println("\t\tFormLayout formLayout = new FormLayout();");
+		out.println("\t\tformLayout.marginWidth = Const.FORM_MARGIN;");
+		out.println("\t\tformLayout.marginHeight = Const.FORM_MARGIN;");
+		out.println("\t\tshell.setLayout(formLayout);");
+		out.println("\t\tshell.setText(Messages.getString(" + dt.getStepname().trim() + "Shell.Title));");
+		out.println("\t\tint middle = props.getMiddlePct();");
+		out.println("\t\tint margin = Const.MARGIN;");
+		
+		out.println();
+		out.println("\t\t// Stepname line");
+		out.println("\t\twlStepname = new Label(shell, SWT.LEFT);");
+		out.println("\t\twlStepname.setText(Messages.getString("+dt.getStepname().trim() + "Stepname.Title"+")); //$NON-NLS-1$");
+		out.println("\t\tprops.setLook(wlStepname);");
+		out.println("\t\tfdlStepname = new FormData();");
+		out.println("\t\tfdlStepname.left = new FormAttachment(0, 0);");
+		out.println("\t\tfdlStepname.right = new FormAttachment(middle, -margin);");
+		out.println("\t\tfdlStepname.top = new FormAttachment(0, margin);");
+		out.println("\t\twlStepname.setLayoutData(fdlStepname);");
+		out.println("\t\twStepname = new Text(shell, SWT.SINGLE | SWT.LEFT | SWT.BORDER);");
+		out.println("\t\twStepname.setText(stepname);");
+		out.println("\t\tprops.setLook(wStepname);");
+		out.println("\t\twStepname.addModifyListener(lsMod);");
+		out.println("\t\tfdStepname = new FormData();");
+		out.println("\t\tfdStepname.left = new FormAttachment(middle, 0);");
+		out.println("\t\tfdStepname.top = new FormAttachment(0, margin);");
+		out.println("\t\tfdStepname.right = new FormAttachment(100, 0);");
+		out.println("\t\twStepname.setLayoutData(fdStepname);");
+		
+		out.println();
+		
+		String lastWidget = "wStepname";
+		
+		for (String d : de) {
+			String[] ds = d.split(",");
+			String variableName = ds[0];
+			String labelText = ds[1];
+			String widgetType = ds[2];
+			
+			
+			out.println("\t\twl" + variableName + " = new Label(shell, SWT.LEFT);");
+			out.println("\t\twl"+variableName+".setText(Messages.getString(\""+dt.getStepname().trim() + "." + variableName + ".Title"+"\"));");
+			out.println("\t\tprops.setLook(wl"+variableName+");");
+			out.println("\t\tfdl" + variableName + " = new FormData();");
+			out.println("\t\tfdl" + variableName + ".left = new FormAttachment(0, 0);");
+			out.println("\t\tfdl" + variableName + ".right = new FormAttachment(middle, -margin);");
+			out.println("\t\tfdl" + variableName + ".top = new FormAttachment(" + lastWidget + ", margin);");
+			out.println("\t\twl" + variableName + ".setLayoutData(fdl" + variableName + ");");
+			out.println("\t\tw" + variableName + " = new " + widgetType + "(shell, SWT.LEFT);");
+			out.println("\t\tprops.setLook(w"+ variableName +");");
+			out.println("\t\tw" + variableName + ".addModifyListener(lsMod);");
+			out.println("\t\tfd" + variableName + " = new FormData();");
+			out.println("\t\tfd" + variableName + ".left = new FormAttachment(middle, 0);");
+			out.println("\t\tfd" + variableName + ".right = new FormAttachment(100, 0);");
+			out.println("\t\tfd" + variableName + ".top = new FormAttachment(" + lastWidget + ", margin);");
+			out.println("\t\tw" + variableName + ".setLayoutData(fd" + variableName + ");");
+			
+			lastWidget = "w"+variableName;
+		}
+		
+		out.println("\t\t//Buttons");
+		out.println("\t\twOK = new Button(shell, SWT.PUSH);");
+		out.println("\t\twOK.setText(Messages.getString(\"System.Button.OK\"));");
+		out.println("\t\twCancel = new Button(shell, SWT.PUSH);");
+		out.println("\t\twCancel.setText(Messages.getString(\"System.Button.Cancel\"));");
+		out.println("\t\tBaseStepDialog.positionBottomButtons(shell, new Button[] { wOK, wCancel, wRefresh }, margin, "+ lastWidget +");");
+		
+		out.println("\t\t//Listeners");
+		out.println("\t\tlsCancel = new Listener() {");
+		out.println("\t\t\tpublic void handleEvent(Event e) {");
+		out.println("\t\t\t\tcancel();");
+		out.println("\t\t\t}");
+		out.println("\t\t};");
+		
+		out.println("\t\tlsOK = new Listener() {");
+		out.println("\t\t\tpublic void handleEvent(Event e) {");
+		out.println("\t\t\t\tok();");
+		out.println("\t\t\t}");
+		out.println("\t\t};");
+		
+		out.println("\t\twCancel.addListener(SWT.Selection, lsCancel);");
+		out.println("\t\twOK.addListener(SWT.Selection, lsOK);");
+		
+		out.println("\t\tlsDef = new SelectionAdapter() {");
+		out.println("\t\t\tpublic void widgetDefaultSelected(SelectionEvent e) {");
+		out.println("\t\t\t\tok();");
+		out.println("\t\t\t}");
+		out.println("\t\t};");
+		
+		out.println("\t\twStepname.addSelectionListener(lsDef);");
+		
+		out.println("\t\tshell.addShellListener(new ShellAdapter() {");
+		out.println("\t\t\tpublic void shellClosed(ShellEvent e) {");
+		out.println("\t\t\t\tcancel();");
+		out.println("\t\t\t}");
+		out.println("\t\t});");
+		
+		out.println("\t\tsetSize();");
+		out.println("\t\tgetData();");
+		out.println("\t\tinput.setChanged(changed);");
+		out.println("\t\tshell.open();");
+		
+		out.println("\t\twhile (!shell.isDisposed()) {");
+		out.println("\t\t\tif (!display.readAndDispatch())");
+		out.println("\t\t\t\tdisplay.sleep();");
+		out.println("\t\t}");
+		out.println("\t\treturn stepname;");
+		
+		out.println("\t}");
+		
+		//Get Data method
+		out.println();
+		
+		out.println("\t// Read data from input (TextFileInputInfo)");
+		out.println("\tpublic void getData() {");
+		out.println("\t\twStepname.selectAll();");
+		out.println("\t\t//Set data to UI elements here");
+		out.println("\t}");
+		
+		out.println();
+		
+		//Cancel method
+		out.println("\tprivate void cancel() {");
+		out.println("\t\tstepname = null;");
+		out.println("\t\tinput.setChanged(changed);");
+		out.println("\t\tdispose();");
+		out.println("\t}");
+		
+		out.println();
+		
+		//isEmpty method
+		out.println("\tprivate boolean isEmpty(String s) {");
+		out.println("\t\treturn s.isEmpty();");
+		out.println("\t}");
+		
+		//ok method
+		out.println("\tprivate void ok() {");
+		out.println("\t\tstepname = wStepname.getText(); // return value");
+		out.println("\t\tif (Const.isEmpty(stepname)) return;");
+		out.println("\t\tPopulate UI variables in meta here");
+		out.println("}");
+
+		out.close();
 	}
-	
-	//Create plugin.xml
+
+	// Create plugin.xml
 	private void createPluginXml() throws Exception {
-		PrintWriter out = new PrintWriter(new File(this.path + "Deploy" + File.separator + "plugin.xml"));
-		
+		PrintWriter out = new PrintWriter(new File(this.path + "Deploy"
+				+ File.separator + "plugin.xml"));
+
 		out.println("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
 		out.println("<plugin");
-		out.println("\tid=\""+dt.getStepname()+"\"");
-		out.println("\ticonfile=\""+dt.getIconfilename()+"\"");
-		out.println("\tdescription=\""+dt.getDescription()+"\"");
-		out.println("\ttooltip=\""+dt.getDescription()+"\"");
-		out.println("\tcategory=\""+dt.getCategory()+"\"");
-		out.println("\tclassname=\""+dt.getPackagename() + "." + dt.getStepname().trim() + "Meta" +"\">");
+		out.println("\tid=\"" + dt.getStepname() + "\"");
+		out.println("\ticonfile=\"" + dt.getIconfilename() + "\"");
+		out.println("\tdescription=\"" + dt.getDescription() + "\"");
+		out.println("\ttooltip=\"" + dt.getDescription() + "\"");
+		out.println("\tcategory=\"" + dt.getCategory() + "\"");
+		out.println("\tclassname=\"" + dt.getPackagename() + "."
+				+ dt.getStepname().trim() + "Meta" + "\">");
 		out.println("\t<libraries>");
-		out.println("\t\t<library name=\""+dt.getLibraryname()+".jar\"/>");
+		out.println("\t\t<library name=\"" + dt.getLibraryname() + ".jar\"/>");
 		out.println("\t</libraries>");
 		out.println("<localized_category>");
-		out.println("\t\t<category locale=\"en_US\">"+dt.getCategory()+"</category>");
+		out.println("\t\t<category locale=\"en_US\">" + dt.getCategory()
+				+ "</category>");
 		out.println("</localized_category>");
 		out.println("<localized_description>");
-		out.println("\t\t<description locale=\"en_US\">"+dt.getDescription()+"</description>");
+		out.println("\t\t<description locale=\"en_US\">" + dt.getDescription()
+				+ "</description>");
 		out.println("</localized_description>");
 		out.println("<localized_tooltip>");
-		out.println("\t\t<tooltip locale=\"en_US\">"+dt.getDescription()+"</tooltip>");
+		out.println("\t\t<tooltip locale=\"en_US\">" + dt.getDescription()
+				+ "</tooltip>");
 		out.println("</localized_tooltip>");
 		out.println("</plugin>");
-		
+
 		out.close();
 	}
 
 	// Create step-attributes.xml
 	private void createStepAttributes() throws Exception {
-		String tempPath = this.packagePath + File.separator + "step-attributes.xml";
+		String tempPath = this.packagePath + File.separator
+				+ "step-attributes.xml";
 		PrintWriter out = new PrintWriter(new File(tempPath));
 
 		out.println("<attributes>");
@@ -72,7 +346,8 @@ public class Generator {
 		for (int i = 0; i < allDS.length; i++) {
 			String[] dsDetails = allDS[i].split(",");
 			if (dsDetails.length < 5) {
-				throw new Exception("Incomplete set of parameters. There should be 5 parameters per datastructure");
+				throw new Exception(
+						"Incomplete set of parameters. There should be 5 parameters per datastructure");
 			}
 			out.println("\t<attribute id=\"" + dsDetails[0] + "\"> <xmlcode>"
 					+ dsDetails[1] + "</xmlcode>" + " <repcode>" + dsDetails[2]
