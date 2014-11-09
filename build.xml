@@ -1,5 +1,4 @@
-<project name="kettlestepboilerplatecodegen" default="default"
-	basedir=".">
+<project name="kettlestepboilerplatecodegen" default="jar" basedir=".">
 	<description>
 		Boiler plate code generator for Kettle step
 	</description>
@@ -9,6 +8,9 @@
 	<property name="classes" location="classes" />
 	<property name="lib" location="lib" />
 	<property name="deploydir" location="deploy" />
+	
+	
+	
 
 	<target name="init" description="Create dirs">
 		<echo>Init....</echo>
@@ -17,29 +19,38 @@
 		<mkdir dir="${classes}" />
 		<mkdir dir="${deploydir}" />
 	</target>
-
-	<target name="compile" description="Compile code">
+	
+	
+	
+	<target name="compile" description="Compile code" depends="init">
 		<echo>Compile....</echo>
 
-		<javac srcdir="${src}" destdir="${classes}" source="1.7" target="1.7"
-			debug="true">
+		<javac srcdir="${src}" destdir="${classes}" source="1.7" target="1.7">
 
 			<classpath id="cpath">
 				<fileset dir="${lib}" includes="*.jar" />
 			</classpath>
 		</javac>
 	</target>
+
 	
-	<target name="distrib" depends="compile" description="Create the distribution package..." >
-        <echo>Copying libraries to deploy directory...</echo>
-        <copy todir="${deploydir}">
-            <fileset
-                    dir="${lib}"
-                    includes="**/*.jar"/>
-        </copy>
-    </target>
-    
-    <target name="clean"  description="clean up generated files" >
-        <delete dir="${classes}"/>
-    </target>
+
+	<target name="clean" description="clean up generated files">
+		<delete dir="${classes}" />
+	</target>
+
+	<target name="jar" depends="compile">
+		
+		
+		
+		<jar destfile="deploy/kettlestepcodegen.jar">
+			
+			<fileset dir="lib/" includes="**/*.jar" />
+			<fileset dir="${classes}" includes="**/*.class" />
+			<manifest>
+				<attribute name="Main-Class" value="am.abhi.kettle.steps.codegen.Starter" />
+				
+			</manifest>
+		</jar>
+	</target>
 </project>
