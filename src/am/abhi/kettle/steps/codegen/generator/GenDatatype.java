@@ -9,7 +9,16 @@ public class GenDatatype {
 	private String packagename;
 	private String libraryname;
 	private String datastructures;
+	private String dialogelements;
+	public String getDialogelements() {
+		return dialogelements;
+	}
+	public void setDialogelements(String dialogelements) {
+		this.dialogelements = dialogelements;
+	}
 	private String saveto;
+	
+	
 	public String getStepname() {
 		return stepname;
 	}
