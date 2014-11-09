@@ -23,12 +23,156 @@ public class Generator {
 		createDialogClass();
 		createMessageClass();
 		createMessageProperties();
+		createMetaClass();
+	}
+
+	// Create Meta class
+	private void createMetaClass() throws Exception {
+		PrintWriter out = new PrintWriter(new File(this.packagePath
+				+ File.separator + dt.getLibraryname() + "Meta.java"));
+
+		out.println("package " + dt.getPackagename() + ";");
+
+		out.println("public class " + dt.getLibraryname()
+				+ "Meta extends BaseStepMeta implements StepMetaInterface {");
+		out.println("//Define the variable to store values from the UI. Define getters and setters.");
+		
+		out.println();
+		
+		String vars = dt.getDatastructures();
+		String[] va = vars.split(";");
+		for (String v : va) {
+			String[] vrs = v.split(",");
+			String attributeId = vrs[0];
+			String dataType = vrs[4];
+			
+			out.println("private " + dataType + " " + attributeId + ";");
+			out.println("public void set" + attributeId + "(" + dataType + " var) {");
+			out.println("\tthis." + attributeId + " = " + "var;");
+			out.println("}");
+			out.println("public " + dataType + " get" + attributeId + "() {");
+			out.println("\treturn this." + attributeId + ";");
+			out.println("}");
+		}
+
+		out.println();
+
+		out.println("@Override");
+		out.println("public void check(List<CheckResultInterface> remarks, TransMeta transmeta, StepMeta stepMeta, RowMetaInterface prev, String[] input, String[] output, RowMetaInterface info) {");
+		out.println("\tCheckResult cr;");
+		out.println("\tif (prev == null || prev.size() == 0) {");
+		out.println("\t\tcr = new CheckResult(CheckResult.TYPE_RESULT_WARNING,\"Not receiving any fields from previous steps!\", stepMeta);");
+		out.println("\t\tremarks.add(cr);");
+		out.println("\t} else {");
+		out.println("\t\tcr = new CheckResult(CheckResult.TYPE_RESULT_OK, \"Step is connected to previous one, receiving \" + prev.size() + \" fields\", stepMeta);");
+		out.println("\t\tremarks.add(cr);");
+		out.println("\t}");
+		out.println("\t// See if we have input streams leading to this step!");
+		out.println("\tif (input.length > 0) {");
+		out.println("\t\tcr = new CheckResult(CheckResult.TYPE_RESULT_OK, \"Step is receiving info from other steps.\", stepMeta);");
+		out.println("\t\tremarks.add(cr);");
+		out.println("\t} else {");
+		out.println("\t\tcr = new CheckResult(CheckResult.TYPE_RESULT_ERROR, \"No input received from other steps!\", stepMeta);");
+		out.println("\t\tremarks.add(cr);");
+		out.println("\t}");
+		out.println("}");
+		
+		out.println();
+		
+		out.println("@Override");
+		out.println("public String getXML() {");
+		out.println("\tStringBuffer retval = new StringBuffer();");
+		out.println("\t//Return the Xml to store the UI properties and data. Commented example below.");
+		out.println("\t/*");
+		out.println("\tretval.append(\"    \").append(XMLHandler.addTagValue(getXmlCode(\"ID\"),Integer.toString(CorrespondingUIElement)));");
+		out.println("\t*/");
+		out.println("\treturn retval.toString();");
+		out.println("}");
+		
+		out.println();
+		
+		out.println("@Override");
+		out.println("public Object clone() {");
+		out.println("\tObject retval = super.clone();");
+		out.println("\treturn retval;");
+		out.println("}");
+		
+		out.println();
+		
+		out.println("@Override");
+		out.println("public void getFields(RowMetaInterface r, String origin, RowMetaInterface[] info, StepMeta nextStep, VariableSpace space) {");
+		out.println("\tValueMetaInterface v;");
+		out.println("\t//Set the output fields if this is a transformation step. Commented example below");
+		out.println("\t/*");
+		out.println("\tv = ValueMetaFactory.createValueMeta(\"SomeVal\", ValueMeta.TYPE_NUMBER);");
+		out.println("\tv.setLength(15);");
+		out.println("\tv.setPrecision(6);");
+		out.println("\tv.setOrigin(origin);");
+		out.println("\tr.addValueMeta(v);");
+		out.println("\t*/");
+		out.println("}");
+		
+		out.println();
+		
+		out.println("@Override");
+		out.println("public StepInterface getStep(StepMeta stepMeta, StepDataInterface stepDataInterface, int cnr, TransMeta transMeta, Trans disp) {");
+		out.println("\treturn new "+dt.getLibraryname()+"(stepMeta, stepDataInterface, cnr, transMeta, disp);");
+		out.println("}");
+		
+		out.println();
+		
+		out.println("@Override");
+		out.println("public StepDataInterface getStepData() {");
+		out.println("\treturn new "+dt.getLibraryname()+"Data();");
+		out.println("}");
+		
+		out.println();
+		
+		out.println("@Override");
+		out.println("public void loadXML(Node stepnode, List<DatabaseMeta> databases, Map<String, Counter> counters) {");
+		out.println("\t//Get data from Xml and populate GUI elements");
+		out.println("\t/*");
+		out.println("\tGUIElementVar = Integer.parseInt(XMLHandler.getTagValue(stepnode,getXmlCode(\"XmlAttr\")));");
+		out.println("\t*/");
+		out.println("}");
+		
+		out.println();
+		
+		out.println("public void readRep(Repository arg0, long arg1, List<DatabaseMeta> arg2, Map<String, Counter> arg3) throws KettleException {");
+		out.println("\t//Code to read step state from a repository");
+		out.println("}");
+		
+		out.println();
+		
+		out.println("public void saveRep(Repository arg0, long arg1, long arg2) throws KettleException {");
+		out.println("\r//Code to save step state to a repository");
+		out.println("}");
+		
+		out.println();
+		
+		out.println("@Override");
+		out.println("public void setDefault() {");
+		out.println("\t//Default values for GUI elements");
+		out.println("}");
+		
+		out.println();
+		
+		out.println("public StepDialogInterface getDialog(Shell shell, StepMetaInterface meta, TransMeta transMeta, String name) {");
+		out.println("\treturn new "+dt.getLibraryname()+"Dialog(shell, meta, transMeta, name);");
+		out.println("}");
+		
+		out.println("}");
+
+		out.close();
 	}
 
 	// Create Message class
 	private void createMessageClass() throws Exception {
 		PrintWriter out = new PrintWriter(new File(this.packagePath
 				+ File.separator + "Messages.java"));
+
+		out.println("package " + dt.getPackagename() + ";");
+
 		out.println("import org.pentaho.di.i18n.BaseMessages;");
 		out.println("public class Messages {");
 		out.println("\tpublic static final String packageName = Messages.class.getPackage().getName();");
@@ -64,34 +208,38 @@ public class Generator {
 		out.println("}");
 		out.close();
 	}
-	
-	//Create Message properties
+
+	// Create Message properties
 	private void createMessageProperties() throws Exception {
-		File messagesDir = new File(this.packagePath + File.separator + "messages");
+		File messagesDir = new File(this.packagePath + File.separator
+				+ "messages");
 		if (!messagesDir.mkdir()) {
 			throw new Exception("Could not create messages dir");
 		}
-		
-		PrintWriter out = new PrintWriter(new File(this.packagePath + File.separator + "messages" + File.separator + "messages_en_US.properties"));
-		out.println(dt.getStepname().trim() + ".Shell.Title=" + dt.getStepname());
+
+		PrintWriter out = new PrintWriter(new File(this.packagePath
+				+ File.separator + "messages" + File.separator
+				+ "messages_en_US.properties"));
+		out.println(dt.getStepname().trim() + ".Shell.Title="
+				+ dt.getStepname());
 		out.println(dt.getStepname().trim() + ".Stepname.Title= Stepname");
-		
+
 		String dialogElements = dt.getDialogelements();
 		if (!dialogElements.contains(",")) {
 			throw new Exception("Invalid format of dialog elements");
 		}
-		
+
 		String[] de = dialogElements.split(";");
-		
+
 		for (String d : de) {
 			String[] ds = d.split(",");
 			String variableName = ds[0];
 			String labelText = ds[1];
 			String widgetType = ds[2];
-			
-			
-			out.println(dt.getStepname().trim() + "." + variableName + ".Title = " + labelText);
-			
+
+			out.println(dt.getStepname().trim() + "." + variableName
+					+ ".Title = " + labelText);
+
 		}
 		out.close();
 	}
@@ -101,30 +249,30 @@ public class Generator {
 		PrintWriter out = new PrintWriter(new File(this.packagePath
 				+ File.separator + dt.getLibraryname() + "Dialog.java"));
 
-		out.println("package " + dt.getPackagename());
+		out.println("package " + dt.getPackagename() + ";");
 
 		out.println("private " + dt.getLibraryname() + "Meta input;");
 
 		out.println("public class " + dt.getLibraryname() + "Dialog"
 				+ " extends BaseStepDialog implements StepDialogInterface {");
-		
+
 		String dialogElements = dt.getDialogelements();
 		if (!dialogElements.contains(",")) {
 			throw new Exception("Invalid format of dialog elements");
 		}
-		
+
 		String[] de = dialogElements.split(";");
-		
+
 		for (String d : de) {
 			String[] ds = d.split(",");
 			String variableName = ds[0];
 			String labelText = ds[1];
 			String widgetType = ds[2];
-			
-			
+
 			out.println("private Label wl" + variableName + ";");
 			out.println("private " + widgetType + " w" + variableName);
-			out.println("private FormData fdl" + variableName + ", fd" + variableName);
+			out.println("private FormData fdl" + variableName + ", fd"
+					+ variableName);
 		}
 
 		// Generate the constructor
@@ -155,14 +303,17 @@ public class Generator {
 		out.println("\t\tformLayout.marginWidth = Const.FORM_MARGIN;");
 		out.println("\t\tformLayout.marginHeight = Const.FORM_MARGIN;");
 		out.println("\t\tshell.setLayout(formLayout);");
-		out.println("\t\tshell.setText(Messages.getString(" + dt.getStepname().trim() + "Shell.Title));");
+		out.println("\t\tshell.setText(Messages.getString("
+				+ dt.getStepname().trim() + "Shell.Title));");
 		out.println("\t\tint middle = props.getMiddlePct();");
 		out.println("\t\tint margin = Const.MARGIN;");
-		
+
 		out.println();
 		out.println("\t\t// Stepname line");
 		out.println("\t\twlStepname = new Label(shell, SWT.LEFT);");
-		out.println("\t\twlStepname.setText(Messages.getString("+dt.getStepname().trim() + "Stepname.Title"+")); //$NON-NLS-1$");
+		out.println("\t\twlStepname.setText(Messages.getString("
+				+ dt.getStepname().trim() + "Stepname.Title"
+				+ ")); //$NON-NLS-1$");
 		out.println("\t\tprops.setLook(wlStepname);");
 		out.println("\t\tfdlStepname = new FormData();");
 		out.println("\t\tfdlStepname.left = new FormAttachment(0, 0);");
@@ -178,114 +329,127 @@ public class Generator {
 		out.println("\t\tfdStepname.top = new FormAttachment(0, margin);");
 		out.println("\t\tfdStepname.right = new FormAttachment(100, 0);");
 		out.println("\t\twStepname.setLayoutData(fdStepname);");
-		
+
 		out.println();
-		
+
 		String lastWidget = "wStepname";
-		
+
 		for (String d : de) {
 			String[] ds = d.split(",");
 			String variableName = ds[0];
 			String labelText = ds[1];
 			String widgetType = ds[2];
-			
-			
-			out.println("\t\twl" + variableName + " = new Label(shell, SWT.LEFT);");
-			out.println("\t\twl"+variableName+".setText(Messages.getString(\""+dt.getStepname().trim() + "." + variableName + ".Title"+"\"));");
-			out.println("\t\tprops.setLook(wl"+variableName+");");
+
+			out.println("\t\twl" + variableName
+					+ " = new Label(shell, SWT.LEFT);");
+			out.println("\t\twl" + variableName
+					+ ".setText(Messages.getString(\""
+					+ dt.getStepname().trim() + "." + variableName + ".Title"
+					+ "\"));");
+			out.println("\t\tprops.setLook(wl" + variableName + ");");
 			out.println("\t\tfdl" + variableName + " = new FormData();");
-			out.println("\t\tfdl" + variableName + ".left = new FormAttachment(0, 0);");
-			out.println("\t\tfdl" + variableName + ".right = new FormAttachment(middle, -margin);");
-			out.println("\t\tfdl" + variableName + ".top = new FormAttachment(" + lastWidget + ", margin);");
-			out.println("\t\twl" + variableName + ".setLayoutData(fdl" + variableName + ");");
-			out.println("\t\tw" + variableName + " = new " + widgetType + "(shell, SWT.LEFT);");
-			out.println("\t\tprops.setLook(w"+ variableName +");");
+			out.println("\t\tfdl" + variableName
+					+ ".left = new FormAttachment(0, 0);");
+			out.println("\t\tfdl" + variableName
+					+ ".right = new FormAttachment(middle, -margin);");
+			out.println("\t\tfdl" + variableName + ".top = new FormAttachment("
+					+ lastWidget + ", margin);");
+			out.println("\t\twl" + variableName + ".setLayoutData(fdl"
+					+ variableName + ");");
+			out.println("\t\tw" + variableName + " = new " + widgetType
+					+ "(shell, SWT.LEFT);");
+			out.println("\t\tprops.setLook(w" + variableName + ");");
 			out.println("\t\tw" + variableName + ".addModifyListener(lsMod);");
 			out.println("\t\tfd" + variableName + " = new FormData();");
-			out.println("\t\tfd" + variableName + ".left = new FormAttachment(middle, 0);");
-			out.println("\t\tfd" + variableName + ".right = new FormAttachment(100, 0);");
-			out.println("\t\tfd" + variableName + ".top = new FormAttachment(" + lastWidget + ", margin);");
-			out.println("\t\tw" + variableName + ".setLayoutData(fd" + variableName + ");");
-			
-			lastWidget = "w"+variableName;
+			out.println("\t\tfd" + variableName
+					+ ".left = new FormAttachment(middle, 0);");
+			out.println("\t\tfd" + variableName
+					+ ".right = new FormAttachment(100, 0);");
+			out.println("\t\tfd" + variableName + ".top = new FormAttachment("
+					+ lastWidget + ", margin);");
+			out.println("\t\tw" + variableName + ".setLayoutData(fd"
+					+ variableName + ");");
+
+			lastWidget = "w" + variableName;
 		}
-		
+
 		out.println("\t\t//Buttons");
 		out.println("\t\twOK = new Button(shell, SWT.PUSH);");
 		out.println("\t\twOK.setText(Messages.getString(\"System.Button.OK\"));");
 		out.println("\t\twCancel = new Button(shell, SWT.PUSH);");
 		out.println("\t\twCancel.setText(Messages.getString(\"System.Button.Cancel\"));");
-		out.println("\t\tBaseStepDialog.positionBottomButtons(shell, new Button[] { wOK, wCancel, wRefresh }, margin, "+ lastWidget +");");
-		
+		out.println("\t\tBaseStepDialog.positionBottomButtons(shell, new Button[] { wOK, wCancel, wRefresh }, margin, "
+				+ lastWidget + ");");
+
 		out.println("\t\t//Listeners");
 		out.println("\t\tlsCancel = new Listener() {");
 		out.println("\t\t\tpublic void handleEvent(Event e) {");
 		out.println("\t\t\t\tcancel();");
 		out.println("\t\t\t}");
 		out.println("\t\t};");
-		
+
 		out.println("\t\tlsOK = new Listener() {");
 		out.println("\t\t\tpublic void handleEvent(Event e) {");
 		out.println("\t\t\t\tok();");
 		out.println("\t\t\t}");
 		out.println("\t\t};");
-		
+
 		out.println("\t\twCancel.addListener(SWT.Selection, lsCancel);");
 		out.println("\t\twOK.addListener(SWT.Selection, lsOK);");
-		
+
 		out.println("\t\tlsDef = new SelectionAdapter() {");
 		out.println("\t\t\tpublic void widgetDefaultSelected(SelectionEvent e) {");
 		out.println("\t\t\t\tok();");
 		out.println("\t\t\t}");
 		out.println("\t\t};");
-		
+
 		out.println("\t\twStepname.addSelectionListener(lsDef);");
-		
+
 		out.println("\t\tshell.addShellListener(new ShellAdapter() {");
 		out.println("\t\t\tpublic void shellClosed(ShellEvent e) {");
 		out.println("\t\t\t\tcancel();");
 		out.println("\t\t\t}");
 		out.println("\t\t});");
-		
+
 		out.println("\t\tsetSize();");
 		out.println("\t\tgetData();");
 		out.println("\t\tinput.setChanged(changed);");
 		out.println("\t\tshell.open();");
-		
+
 		out.println("\t\twhile (!shell.isDisposed()) {");
 		out.println("\t\t\tif (!display.readAndDispatch())");
 		out.println("\t\t\t\tdisplay.sleep();");
 		out.println("\t\t}");
 		out.println("\t\treturn stepname;");
-		
+
 		out.println("\t}");
-		
-		//Get Data method
+
+		// Get Data method
 		out.println();
-		
+
 		out.println("\t// Read data from input (TextFileInputInfo)");
 		out.println("\tpublic void getData() {");
 		out.println("\t\twStepname.selectAll();");
 		out.println("\t\t//Set data to UI elements here");
 		out.println("\t}");
-		
+
 		out.println();
-		
-		//Cancel method
+
+		// Cancel method
 		out.println("\tprivate void cancel() {");
 		out.println("\t\tstepname = null;");
 		out.println("\t\tinput.setChanged(changed);");
 		out.println("\t\tdispose();");
 		out.println("\t}");
-		
+
 		out.println();
-		
-		//isEmpty method
+
+		// isEmpty method
 		out.println("\tprivate boolean isEmpty(String s) {");
 		out.println("\t\treturn s.isEmpty();");
 		out.println("\t}");
-		
-		//ok method
+
+		// ok method
 		out.println("\tprivate void ok() {");
 		out.println("\t\tstepname = wStepname.getText(); // return value");
 		out.println("\t\tif (Const.isEmpty(stepname)) return;");
