@@ -35,6 +35,7 @@ public class FrontScreen {
 	private Text tLibrary;
 	private Text tDataStructures;
 	private Text tSave;
+	private Text tDialogUiElements;
 	
 	private MessageBox msgBox;
 
@@ -152,6 +153,17 @@ public class FrontScreen {
 		
 		tDataStructures.setLayoutData(data);
 		
+		//Step GUI elements
+		data = new GridData(SWT.FILL, SWT.TOP, true, false, 2, 1);
+		Label lDialogElement = new Label(shell, SWT.LEFT | SWT.BORDER);
+		lDialogElement.setText("Dialog UI elements for the plugin dialog in the format <Variable_Name>,<Label_Text>,<SWT_WidgetType>;<Variable_Name>,<Label_Text>,<SWT_WidgetType>....");
+		lDialogElement.setLayoutData(data);
+		data.heightHint = 50;
+		
+		tDialogUiElements = new Text(shell, SWT.LEFT | SWT.BORDER | SWT.MULTI | SWT.RESIZE);
+		tDialogUiElements.setLayoutData(data);
+		
+		
 		
 		data = new GridData(SWT.FILL, SWT.TOP, true, false);
 		tSave = new Text(shell, SWT.LEFT | SWT.BORDER);
@@ -208,9 +220,10 @@ public class FrontScreen {
 		dt.setPluginid(tpluginid.getText());
 		dt.setSaveto(tSave.getText());
 		dt.setStepname(tstepname.getText());
+		dt.setDialogelements(tDialogUiElements.getText());
 		
 		try {
-			Generator.startGenerator(dt);
+			new Generator().startGenerator(dt);
 			msgBox = new MessageBox(shell);
 			msgBox.setMessage("Generation complete");
 			msgBox.open();
@@ -226,3 +239,4 @@ public class FrontScreen {
 		shell.dispose();
 	}
 }
+;
