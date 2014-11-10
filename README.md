@@ -15,3 +15,6 @@ and not the boilerplate code that is required to make a Kettle plugin work. Belo
 ![App GUI](http://abhi.am/wp-content/uploads/2014/11/Screen-Shot-2014-11-09-at-5.16.58-PM.png)
 
 ![Auto generated Code](http://abhi.am/wp-content/uploads/2014/11/Screen-Shot-2014-11-09-at-5.18.34-PM.png)
+
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/adeydas/kettlecodegen/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+
