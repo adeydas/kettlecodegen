@@ -35,6 +35,16 @@ public class Generator {
 
 		out.println("package " + dt.getPackagename() + ";");
 		
+		out.println("import org.pentaho.di.core.Const;");
+		out.println("import org.pentaho.di.core.exception.KettleException;");
+		out.println("import org.pentaho.di.trans.Trans;");
+		out.println("import org.pentaho.di.trans.TransMeta;");
+		out.println("import org.pentaho.di.trans.step.BaseStep;");
+		out.println("import org.pentaho.di.trans.step.StepDataInterface;");
+		out.println("import org.pentaho.di.trans.step.StepInterface;");
+		out.println("import org.pentaho.di.trans.step.StepMeta;");
+		out.println("import org.pentaho.di.trans.step.StepMetaInterface;");
+		
 		out.println("public class "+dt.getLibraryname()+" extends BaseStep implements StepInterface {");
 		out.println("private "+dt.getLibraryname()+"Data data;");
 		out.println("private "+dt.getLibraryname()+"Meta meta;");
@@ -112,6 +122,11 @@ public class Generator {
 
 		out.println("package " + dt.getPackagename() + ";");
 		
+		
+		out.println("import org.pentaho.di.trans.step.BaseStepData;");
+		out.println("import org.pentaho.di.trans.step.StepDataInterface;");
+		
+		
 		out.println("public class "+dt.getLibraryname()+"Data extends BaseStepData implements StepDataInterface {");
 		out.println("//All intermitent data for the step goes here");
 		
@@ -132,6 +147,30 @@ public class Generator {
 				+ File.separator + dt.getLibraryname() + "Meta.java"));
 
 		out.println("package " + dt.getPackagename() + ";");
+		
+		out.println("import java.util.List;");
+		out.println("import java.util.Map;");
+		out.println("import org.eclipse.swt.widgets.Shell;");
+		out.println("import org.pentaho.di.core.CheckResult;");
+		out.println("import org.pentaho.di.core.CheckResultInterface;");
+		out.println("import org.pentaho.di.core.Counter;");
+		out.println("import org.pentaho.di.core.database.DatabaseMeta;");
+		out.println("import org.pentaho.di.core.exception.KettleException;");
+		out.println("import org.pentaho.di.core.row.RowMetaInterface;");
+		out.println("import org.pentaho.di.core.row.ValueMetaInterface;");
+		out.println("import org.pentaho.di.core.variables.VariableSpace;");
+		out.println("import org.pentaho.di.repository.Repository;");
+		out.println("import org.pentaho.di.trans.Trans;");
+		out.println("import org.pentaho.di.trans.TransMeta;");
+		out.println("import org.pentaho.di.trans.step.BaseStepMeta;");
+		out.println("import org.pentaho.di.trans.step.StepDataInterface;");
+		out.println("import org.pentaho.di.trans.step.StepDialogInterface;");
+		out.println("import org.pentaho.di.trans.step.StepInterface;");
+		out.println("import org.pentaho.di.trans.step.StepMeta;");
+		out.println("import org.pentaho.di.trans.step.StepMetaInterface;");
+		out.println("import org.w3c.dom.Node;");
+		
+		
 
 		out.println("public class " + dt.getLibraryname()
 				+ "Meta extends BaseStepMeta implements StepMetaInterface {");
@@ -351,7 +390,29 @@ public class Generator {
 
 		out.println("package " + dt.getPackagename() + ";");
 
-		
+		//Imports
+		out.println("import org.eclipse.swt.SWT;");
+		out.println("import org.eclipse.swt.events.ModifyEvent;");
+		out.println("import org.eclipse.swt.events.ModifyListener;");
+		out.println("import org.eclipse.swt.events.SelectionAdapter;");
+		out.println("import org.eclipse.swt.events.SelectionEvent;");
+		out.println("import org.eclipse.swt.events.ShellAdapter;");
+		out.println("import org.eclipse.swt.events.ShellEvent;");
+		out.println("import org.eclipse.swt.layout.FormAttachment;");
+		out.println("import org.eclipse.swt.layout.FormData;");
+		out.println("import org.eclipse.swt.layout.FormLayout;");
+		out.println("import org.eclipse.swt.widgets.Button;");
+		out.println("import org.eclipse.swt.widgets.Display;");
+		out.println("import org.eclipse.swt.widgets.Event;");
+		out.println("import org.eclipse.swt.widgets.Label;");
+		out.println("import org.eclipse.swt.widgets.Listener;");
+		out.println("import org.eclipse.swt.widgets.Shell;");
+		out.println("import org.eclipse.swt.widgets.Text;");
+		out.println("import org.pentaho.di.core.Const;");
+		out.println("import org.pentaho.di.trans.TransMeta;");
+		out.println("import org.pentaho.di.trans.step.StepDialogInterface;");
+		out.println("import org.pentaho.di.trans.step.StepMetaInterface;");
+		out.println("import org.pentaho.di.ui.trans.step.BaseStepDialog;");
 
 		out.println("public class " + dt.getLibraryname() + "Dialog"
 				+ " extends BaseStepDialog implements StepDialogInterface {");
@@ -372,9 +433,9 @@ public class Generator {
 			String widgetType = ds[2];
 
 			out.println("private Label wl" + variableName + ";");
-			out.println("private " + widgetType + " w" + variableName);
+			out.println("private " + widgetType + " w" + variableName + ";");
 			out.println("private FormData fdl" + variableName + ", fd"
-					+ variableName);
+					+ variableName + ";");
 		}
 
 		// Generate the constructor
@@ -405,16 +466,16 @@ public class Generator {
 		out.println("\t\tformLayout.marginWidth = Const.FORM_MARGIN;");
 		out.println("\t\tformLayout.marginHeight = Const.FORM_MARGIN;");
 		out.println("\t\tshell.setLayout(formLayout);");
-		out.println("\t\tshell.setText(Messages.getString("
-				+ dt.getStepname().trim() + "Shell.Title));");
+		out.println("\t\tshell.setText(Messages.getString(\""
+				+ dt.getStepname().trim() + "Shell.Title\"));");
 		out.println("\t\tint middle = props.getMiddlePct();");
 		out.println("\t\tint margin = Const.MARGIN;");
 
 		out.println();
 		out.println("\t\t// Stepname line");
 		out.println("\t\twlStepname = new Label(shell, SWT.LEFT);");
-		out.println("\t\twlStepname.setText(Messages.getString("
-				+ dt.getStepname().trim() + "Stepname.Title"
+		out.println("\t\twlStepname.setText(Messages.getString(\""
+				+ dt.getStepname().trim() + "Stepname.Title\""
 				+ ")); //$NON-NLS-1$");
 		out.println("\t\tprops.setLook(wlStepname);");
 		out.println("\t\tfdlStepname = new FormData();");
@@ -480,7 +541,7 @@ public class Generator {
 		out.println("\t\twOK.setText(Messages.getString(\"System.Button.OK\"));");
 		out.println("\t\twCancel = new Button(shell, SWT.PUSH);");
 		out.println("\t\twCancel.setText(Messages.getString(\"System.Button.Cancel\"));");
-		out.println("\t\tBaseStepDialog.positionBottomButtons(shell, new Button[] { wOK, wCancel, wRefresh }, margin, "
+		out.println("\t\tBaseStepDialog.positionBottomButtons(shell, new Button[] { wOK, wCancel }, margin, "
 				+ lastWidget + ");");
 
 		out.println("\t\t//Listeners");
