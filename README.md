@@ -16,5 +16,7 @@ and not the boilerplate code that is required to make a Kettle plugin work. Belo
 
 ![Auto generated Code](http://abhi.am/wp-content/uploads/2014/11/Screen-Shot-2014-11-09-at-5.18.34-PM.png)
 
-[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/adeydas/kettlecodegen/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+If you are on a Mac, make sure to run it with the -XstartOnFirstThread flag to avoid "Invalid thread access" error.
+
+Make sure to re-compile the code with SWT for your architecture.
 
