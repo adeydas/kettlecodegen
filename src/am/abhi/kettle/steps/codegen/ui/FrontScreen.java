@@ -20,6 +20,7 @@ import org.eclipse.swt.widgets.Text;
 
 import am.abhi.kettle.steps.codegen.generator.GenDatatype;
 import am.abhi.kettle.steps.codegen.generator.Generator;
+import am.abhi.kettle.steps.codegen.generator.ProgressMessage;
 
 public class FrontScreen {
 	private Shell shell;
@@ -36,7 +37,12 @@ public class FrontScreen {
 	private Text tDataStructures;
 	private Text tSave;
 	private Text tDialogUiElements;
-	
+	private Button bGenerate;
+	private Label progressUpdate;
+	private boolean processFlag = false;
+
+	private Thread t;
+
 	private MessageBox msgBox;
 
 	public void createScreen() {
@@ -54,8 +60,16 @@ public class FrontScreen {
 
 		shell.open();
 		while (!shell.isDisposed()) {
+			progressUpdate.setText(ProgressMessage.message);
+			if (processFlag) {
+				if (t.isInterrupted()) {
+					bGenerate.setEnabled(true);
+					processFlag = false;
+				}
+			}
 			if (!display.readAndDispatch())
-				display.sleep();
+				;
+			// display.sleep();
 		}
 
 		dispose();
@@ -148,68 +162,75 @@ public class FrontScreen {
 		lDatastructures
 				.setText("Data structures used in the plugin in the format <Attribute_ID>,<Attribute_ID_XML>,<RepCode_ID>,<Description>,<Datatype>,<Parent_Node>;<Attribute_ID>,<Attribute_ID_XML>,<RepCode_ID>,<Description>,<Datatype>,<Parent_Node>;....");
 		lDatastructures.setLayoutData(data);
-		
-		tDataStructures = new Text(shell, SWT.LEFT | SWT.BORDER | SWT.MULTI | SWT.RESIZE);
-		
+
+		tDataStructures = new Text(shell, SWT.LEFT | SWT.BORDER | SWT.MULTI
+				| SWT.RESIZE);
+
 		tDataStructures.setLayoutData(data);
-		
-		//Step GUI elements
+
+		// Step GUI elements
 		data = new GridData(SWT.FILL, SWT.TOP, true, false, 2, 1);
 		Label lDialogElement = new Label(shell, SWT.LEFT | SWT.BORDER);
-		lDialogElement.setText("Dialog UI elements for the plugin dialog in the format <Variable_Name>,<Label_Text>,<SWT_WidgetType>;<Variable_Name>,<Label_Text>,<SWT_WidgetType>....");
+		lDialogElement
+				.setText("Dialog UI elements for the plugin dialog in the format <Variable_Name>,<Label_Text>,<SWT_WidgetType>;<Variable_Name>,<Label_Text>,<SWT_WidgetType>....");
 		lDialogElement.setLayoutData(data);
 		data.heightHint = 50;
-		
-		tDialogUiElements = new Text(shell, SWT.LEFT | SWT.BORDER | SWT.MULTI | SWT.RESIZE);
+
+		tDialogUiElements = new Text(shell, SWT.LEFT | SWT.BORDER | SWT.MULTI
+				| SWT.RESIZE);
 		tDialogUiElements.setLayoutData(data);
-		
-		
-		
+
 		data = new GridData(SWT.FILL, SWT.TOP, true, false);
 		tSave = new Text(shell, SWT.LEFT | SWT.BORDER);
 		tSave.setLayoutData(data);
-		
-		Button bSaveDialog = new Button(shell,SWT.PUSH);
+
+		Button bSaveDialog = new Button(shell, SWT.PUSH);
 		bSaveDialog.setText("Save To....");
 		bSaveDialog.setLayoutData(data);
-		
-		Button bGenerate = new Button(shell, SWT.PUSH);
+
+		bGenerate = new Button(shell, SWT.PUSH);
 		bGenerate.setText("Generate");
 		bGenerate.setLayoutData(data);
-		
-		//Listeners
+
+		// Listeners
 		Listener lsSaveTo = new Listener() {
 
 			@Override
 			public void handleEvent(Event arg0) {
 				saveto();
-				
+
 			}
-			
+
 		};
 		bSaveDialog.addListener(SWT.Selection, lsSaveTo);
-		
+
 		Listener lsGenerate = new Listener() {
 
 			@Override
 			public void handleEvent(Event arg0) {
 				generate();
-				
+
 			}
-			
+
 		};
-		
+
 		bGenerate.addListener(SWT.Selection, lsGenerate);
+
+		data = new GridData(SWT.FILL, SWT.TOP, true, false, 2, 1);
+		progressUpdate = new Label(shell, SWT.LEFT | SWT.BORDER);
+		progressUpdate.setText(ProgressMessage.message);
 	}
-	
+
 	private void saveto() {
 		DirectoryDialog dialog = new DirectoryDialog(shell);
 		dialog.setFilterPath(".");
 		String result = dialog.open();
 		tSave.setText(result);
 	}
-	
+
 	private void generate() {
+		bGenerate.setEnabled(false);
+
 		GenDatatype dt = new GenDatatype();
 		dt.setCategory(tcategory.getText());
 		dt.setDatastructures(tDataStructures.getText().trim());
@@ -221,12 +242,14 @@ public class FrontScreen {
 		dt.setSaveto(tSave.getText());
 		dt.setStepname(tstepname.getText());
 		dt.setDialogelements(tDialogUiElements.getText());
-		
+
 		try {
-			new Generator().startGenerator(dt);
-			msgBox = new MessageBox(shell);
-			msgBox.setMessage("Generation complete");
-			msgBox.open();
+			Generator g = new Generator();
+			g.setGenDatatype(dt);
+			t = new Thread(g);
+			t.start();
+			processFlag = true;
+
 		} catch (Exception e) {
 			msgBox = new MessageBox(shell, SWT.ERROR);
 			msgBox.setMessage(e.getMessage());
@@ -235,8 +258,8 @@ public class FrontScreen {
 	}
 
 	private void dispose() {
+		t.interrupt();
 		display.dispose();
 		shell.dispose();
 	}
-}
-;
+};

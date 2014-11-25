@@ -2,19 +2,24 @@ package am.abhi.kettle.steps.codegen.generator;
 
 import java.io.File;
 import java.io.PrintWriter;
+import java.util.List;
 
-public class Generator {
+public class Generator implements Runnable {
 	private String path;
 	private GenDatatype dt;
 	private String packagePath;
+	
+	public void setGenDatatype(GenDatatype dt) {
+		this.dt = dt;
+	}
 
-	public void startGenerator(GenDatatype dt) throws Exception {
+	public void startGenerator() throws Exception {
 		String path = dt.getSaveto();
 		if (path.isEmpty()) {
 			throw new Exception("Save path cannot be empty");
 		}
 		this.path = path;
-		this.dt = dt;
+		
 
 		createDirs();
 		createBuildXml();
@@ -26,15 +31,96 @@ public class Generator {
 		createMetaClass();
 		createDataClass();
 		createMainClass();
+		createClassPath();
+		createEclipseProject();
+		
+		ProgressMessage.message = "All done!";
+		
+		Thread.currentThread().interrupt();
+		
+		if (Thread.interrupted()) {
+			return;
+		}
+		
 	}
-	
-	//Create Main class
+
+	// Create a Eclipse nature for the project. Most IDE's can import from this
+	// nature
+	private void createEclipseProject() throws Exception {
+		if (Thread.interrupted()) {
+			return;
+		}
+		PrintWriter out = new PrintWriter(new File(this.path + File.separator + ".project"));
+		
+		out.println("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
+		out.println("<projectDescription>");
+		out.println("\t<name>" + dt.getLibraryname() + "</name>");
+		out.println("\t<comment>Generated with https://github.com/adeydas/kettlecodegen</comment>");
+		out.println("\t<projects>");
+		out.println("\t</projects>");
+		out.println("\t<buildSpec>");
+		out.println("\t\t<buildCommand>");
+		out.println("\t\t\t<name>org.eclipse.jdt.core.javabuilder</name>");
+		out.println("\t\t\t<arguments>");
+		out.println("\t\t\t</arguments>");
+		out.println("\t\t</buildCommand>");
+		out.println("\t</buildSpec>");
+		out.println("\t<natures>");
+		out.println("\t\t<nature>org.eclipse.jdt.core.javanature</nature>");
+		out.println("\t</natures>");
+		out.println("</projectDescription>");
+		
+		out.close();
+		
+		ProgressMessage.message = "Created eclipse nature for project";
+	}
+
+	// Download all dependencies from S3
+	private List<String> downloadAllDeps() throws Exception {
+		
+		S3Downloader obj = new S3Downloader();
+		List<String> depsPaths = obj.downloadArtifacts(this.path);
+		
+		ProgressMessage.message = "Downloaded all artifacts from S3";
+		
+		return depsPaths;
+	}
+
+	// Create classpath
+	private void createClassPath() throws Exception {
+		if (Thread.interrupted()) {
+			return;
+		}
+		PrintWriter out = new PrintWriter(new File(this.path + File.separator
+				+ ".classpath"));
+		out.println("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
+		out.println("<classpath>");
+		out.println("<classpathentry kind=\"src\" path=\"src\"/>");
+		out.println("<classpathentry kind=\"con\" path=\"org.eclipse.jdt.launching.JRE_CONTAINER\"/>");
+
+		List<String> allDepsPaths = downloadAllDeps();
+		if (allDepsPaths != null && allDepsPaths.size() > 0) {
+			for (String s : allDepsPaths) {
+				out.println("<classpathentry kind=\"lib\" path=\"" + s + "\"/>");
+			}
+		}
+
+		out.println("</classpath>");
+		out.close();
+		
+		ProgressMessage.message = "Created classpath";
+	}
+
+	// Create Main class
 	private void createMainClass() throws Exception {
+		if (Thread.interrupted()) {
+			return;
+		}
 		PrintWriter out = new PrintWriter(new File(this.packagePath
 				+ File.separator + dt.getLibraryname() + ".java"));
 
 		out.println("package " + dt.getPackagename() + ";");
-		
+
 		out.println("import org.pentaho.di.core.Const;");
 		out.println("import org.pentaho.di.core.exception.KettleException;");
 		out.println("import org.pentaho.di.trans.Trans;");
@@ -44,23 +130,26 @@ public class Generator {
 		out.println("import org.pentaho.di.trans.step.StepInterface;");
 		out.println("import org.pentaho.di.trans.step.StepMeta;");
 		out.println("import org.pentaho.di.trans.step.StepMetaInterface;");
-		
-		out.println("public class "+dt.getLibraryname()+" extends BaseStep implements StepInterface {");
-		out.println("private "+dt.getLibraryname()+"Data data;");
-		out.println("private "+dt.getLibraryname()+"Meta meta;");
-		
+
+		out.println("public class " + dt.getLibraryname()
+				+ " extends BaseStep implements StepInterface {");
+		out.println("private " + dt.getLibraryname() + "Data data;");
+		out.println("private " + dt.getLibraryname() + "Meta meta;");
+
 		out.println();
-		
-		out.println("public "+dt.getLibraryname()+"(StepMeta stepMeta, StepDataInterface stepDataInterface, int copyNr, TransMeta transMeta, Trans trans) {");
+
+		out.println("public "
+				+ dt.getLibraryname()
+				+ "(StepMeta stepMeta, StepDataInterface stepDataInterface, int copyNr, TransMeta transMeta, Trans trans) {");
 		out.println("\tsuper(stepMeta, stepDataInterface, copyNr, transMeta, trans);");
 		out.println("}");
-		
+
 		out.println();
-		
+
 		out.println("public synchronized boolean processRow(StepMetaInterface smi, StepDataInterface sdi) throws KettleException {");
-		
-		out.println("\tmeta = ("+dt.getLibraryname()+"Meta) smi;");
-		out.println("\tdata = ("+dt.getLibraryname()+"Data) sdi;");
+
+		out.println("\tmeta = (" + dt.getLibraryname() + "Meta) smi;");
+		out.println("\tdata = (" + dt.getLibraryname() + "Data) sdi;");
 		out.println();
 		out.println("\tObject[] r = getRow();");
 		out.println("\tif (r == null) {");
@@ -75,26 +164,26 @@ public class Generator {
 		out.println("\t}");
 		out.println("\treturn true;");
 		out.println("}");
-		
+
 		out.println();
-		
+
 		out.println("public boolean init(StepMetaInterface smi, StepDataInterface sdi) {");
-		out.println("\tmeta = ("+dt.getLibraryname()+"Meta) smi;");
-		out.println("\tdata = ("+dt.getLibraryname()+"Data) sdi;");
+		out.println("\tmeta = (" + dt.getLibraryname() + "Meta) smi;");
+		out.println("\tdata = (" + dt.getLibraryname() + "Data) sdi;");
 		out.println("\t//All initialization code goes here");
 		out.println("return super.init(smi, sdi);");
 		out.println("}");
-		
+
 		out.println();
-		
+
 		out.println("public void dispose(StepMetaInterface smi, StepDataInterface sdi) {");
-		out.println("\tmeta = ("+dt.getLibraryname()+"Meta) smi;");
-		out.println("\tdata = ("+dt.getLibraryname()+"Data) sdi;");
+		out.println("\tmeta = (" + dt.getLibraryname() + "Meta) smi;");
+		out.println("\tdata = (" + dt.getLibraryname() + "Data) sdi;");
 		out.println("\tsuper.dispose(smi, sdi);");
 		out.println("}");
-		
+
 		out.println();
-		
+
 		out.println("public void run() {");
 		out.println("\ttry {");
 		out.println("\twhile (processRow(meta, data) && !isStopped());");
@@ -107,47 +196,52 @@ public class Generator {
 		out.println("\tmarkStop();");
 		out.println("\t}");
 		out.println("}");
-		
-		
-		
+
 		out.println("}");
-		
+
 		out.close();
+		
+		ProgressMessage.message = "Created main class";
 	}
-	
-	//Create Data class
+
+	// Create Data class
 	private void createDataClass() throws Exception {
+		if (Thread.interrupted()) {
+			return;
+		}
 		PrintWriter out = new PrintWriter(new File(this.packagePath
 				+ File.separator + dt.getLibraryname() + "Data.java"));
 
 		out.println("package " + dt.getPackagename() + ";");
-		
-		
+
 		out.println("import org.pentaho.di.trans.step.BaseStepData;");
 		out.println("import org.pentaho.di.trans.step.StepDataInterface;");
-		
-		
-		out.println("public class "+dt.getLibraryname()+"Data extends BaseStepData implements StepDataInterface {");
+
+		out.println("public class " + dt.getLibraryname()
+				+ "Data extends BaseStepData implements StepDataInterface {");
 		out.println("//All intermitent data for the step goes here");
-		
-		out.println("public "+dt.getLibraryname()+"Data() {");
+
+		out.println("public " + dt.getLibraryname() + "Data() {");
 		out.println("\tsuper();");
 		out.println("}");
-		
-		
+
 		out.println("}");
-		
-		
+
 		out.close();
+		
+		ProgressMessage.message = "Created data class";
 	}
 
 	// Create Meta class
 	private void createMetaClass() throws Exception {
+		if (Thread.interrupted()) {
+			return;
+		}
 		PrintWriter out = new PrintWriter(new File(this.packagePath
 				+ File.separator + dt.getLibraryname() + "Meta.java"));
 
 		out.println("package " + dt.getPackagename() + ";");
-		
+
 		out.println("import java.util.List;");
 		out.println("import java.util.Map;");
 		out.println("import org.eclipse.swt.widgets.Shell;");
@@ -169,24 +263,23 @@ public class Generator {
 		out.println("import org.pentaho.di.trans.step.StepMeta;");
 		out.println("import org.pentaho.di.trans.step.StepMetaInterface;");
 		out.println("import org.w3c.dom.Node;");
-		
-		
 
 		out.println("public class " + dt.getLibraryname()
 				+ "Meta extends BaseStepMeta implements StepMetaInterface {");
 		out.println("//Define the variable to store values from the UI. Define getters and setters.");
-		
+
 		out.println();
-		
+
 		String vars = dt.getDatastructures();
 		String[] va = vars.split(";");
 		for (String v : va) {
 			String[] vrs = v.split(",");
 			String attributeId = vrs[0];
 			String dataType = vrs[4];
-			
+
 			out.println("private " + dataType + " " + attributeId + ";");
-			out.println("public void set" + attributeId + "(" + dataType + " var) {");
+			out.println("public void set" + attributeId + "(" + dataType
+					+ " var) {");
 			out.println("\tthis." + attributeId + " = " + "var;");
 			out.println("}");
 			out.println("public " + dataType + " get" + attributeId + "() {");
@@ -215,9 +308,9 @@ public class Generator {
 		out.println("\t\tremarks.add(cr);");
 		out.println("\t}");
 		out.println("}");
-		
+
 		out.println();
-		
+
 		out.println("@Override");
 		out.println("public String getXML() {");
 		out.println("\tStringBuffer retval = new StringBuffer();");
@@ -227,17 +320,17 @@ public class Generator {
 		out.println("\t*/");
 		out.println("\treturn retval.toString();");
 		out.println("}");
-		
+
 		out.println();
-		
+
 		out.println("@Override");
 		out.println("public Object clone() {");
 		out.println("\tObject retval = super.clone();");
 		out.println("\treturn retval;");
 		out.println("}");
-		
+
 		out.println();
-		
+
 		out.println("@Override");
 		out.println("public void getFields(RowMetaInterface r, String origin, RowMetaInterface[] info, StepMeta nextStep, VariableSpace space) {");
 		out.println("\tValueMetaInterface v;");
@@ -250,23 +343,24 @@ public class Generator {
 		out.println("\tr.addValueMeta(v);");
 		out.println("\t*/");
 		out.println("}");
-		
+
 		out.println();
-		
+
 		out.println("@Override");
 		out.println("public StepInterface getStep(StepMeta stepMeta, StepDataInterface stepDataInterface, int cnr, TransMeta transMeta, Trans disp) {");
-		out.println("\treturn new "+dt.getLibraryname()+"(stepMeta, stepDataInterface, cnr, transMeta, disp);");
+		out.println("\treturn new " + dt.getLibraryname()
+				+ "(stepMeta, stepDataInterface, cnr, transMeta, disp);");
 		out.println("}");
-		
+
 		out.println();
-		
+
 		out.println("@Override");
 		out.println("public StepDataInterface getStepData() {");
-		out.println("\treturn new "+dt.getLibraryname()+"Data();");
+		out.println("\treturn new " + dt.getLibraryname() + "Data();");
 		out.println("}");
-		
+
 		out.println();
-		
+
 		out.println("@Override");
 		out.println("public void loadXML(Node stepnode, List<DatabaseMeta> databases, Map<String, Counter> counters) {");
 		out.println("\t//Get data from Xml and populate GUI elements");
@@ -274,39 +368,45 @@ public class Generator {
 		out.println("\tGUIElementVar = Integer.parseInt(XMLHandler.getTagValue(stepnode,getXmlCode(\"XmlAttr\")));");
 		out.println("\t*/");
 		out.println("}");
-		
+
 		out.println();
-		
+
 		out.println("public void readRep(Repository arg0, long arg1, List<DatabaseMeta> arg2, Map<String, Counter> arg3) throws KettleException {");
 		out.println("\t//Code to read step state from a repository");
 		out.println("}");
-		
+
 		out.println();
-		
+
 		out.println("public void saveRep(Repository arg0, long arg1, long arg2) throws KettleException {");
 		out.println("\r//Code to save step state to a repository");
 		out.println("}");
-		
+
 		out.println();
-		
+
 		out.println("@Override");
 		out.println("public void setDefault() {");
 		out.println("\t//Default values for GUI elements");
 		out.println("}");
-		
+
 		out.println();
-		
+
 		out.println("public StepDialogInterface getDialog(Shell shell, StepMetaInterface meta, TransMeta transMeta, String name) {");
-		out.println("\treturn new "+dt.getLibraryname()+"Dialog(shell, meta, transMeta, name);");
+		out.println("\treturn new " + dt.getLibraryname()
+				+ "Dialog(shell, meta, transMeta, name);");
 		out.println("}");
-		
+
 		out.println("}");
 
 		out.close();
+		
+		ProgressMessage.message = "Created meta class";
 	}
 
 	// Create Message class
 	private void createMessageClass() throws Exception {
+		if (Thread.interrupted()) {
+			return;
+		}
 		PrintWriter out = new PrintWriter(new File(this.packagePath
 				+ File.separator + "Messages.java"));
 
@@ -346,10 +446,15 @@ public class Generator {
 
 		out.println("}");
 		out.close();
+		
+		ProgressMessage.message = "Created message class";
 	}
 
 	// Create Message properties
 	private void createMessageProperties() throws Exception {
+		if (Thread.interrupted()) {
+			return;
+		}
 		File messagesDir = new File(this.packagePath + File.separator
 				+ "messages");
 		if (!messagesDir.mkdir()) {
@@ -381,16 +486,21 @@ public class Generator {
 
 		}
 		out.close();
+		
+		ProgressMessage.message = "Created message properties";
 	}
 
 	// Create Dialog class
 	private void createDialogClass() throws Exception {
+		if (Thread.interrupted()) {
+			return;
+		}
 		PrintWriter out = new PrintWriter(new File(this.packagePath
 				+ File.separator + dt.getLibraryname() + "Dialog.java"));
 
 		out.println("package " + dt.getPackagename() + ";");
 
-		//Imports
+		// Imports
 		out.println("import org.eclipse.swt.SWT;");
 		out.println("import org.eclipse.swt.events.ModifyEvent;");
 		out.println("import org.eclipse.swt.events.ModifyListener;");
@@ -416,7 +526,7 @@ public class Generator {
 
 		out.println("public class " + dt.getLibraryname() + "Dialog"
 				+ " extends BaseStepDialog implements StepDialogInterface {");
-		
+
 		out.println("private " + dt.getLibraryname() + "Meta input;");
 
 		String dialogElements = dt.getDialogelements();
@@ -618,14 +728,19 @@ public class Generator {
 		out.println("\t\tif (Const.isEmpty(stepname)) return;");
 		out.println("\t\t//Populate UI variables in meta here");
 		out.println("}");
-		
+
 		out.println("}");
 
 		out.close();
+		
+		ProgressMessage.message = "Created dialog class";
 	}
 
 	// Create plugin.xml
 	private void createPluginXml() throws Exception {
+		if (Thread.interrupted()) {
+			return;
+		}
 		PrintWriter out = new PrintWriter(new File(this.path + "Deploy"
 				+ File.separator + "plugin.xml"));
 
@@ -656,10 +771,15 @@ public class Generator {
 		out.println("</plugin>");
 
 		out.close();
+		
+		ProgressMessage.message = "Created plugin.xml";
 	}
 
 	// Create step-attributes.xml
 	private void createStepAttributes() throws Exception {
+		if (Thread.interrupted()) {
+			return;
+		}
 		String tempPath = this.packagePath + File.separator
 				+ "step-attributes.xml";
 		PrintWriter out = new PrintWriter(new File(tempPath));
@@ -687,10 +807,15 @@ public class Generator {
 		out.println("</attributes>");
 
 		out.close();
+		
+		ProgressMessage.message = "Created step-attributes.xml";
 	}
 
 	// Create build.xml
 	private void createBuildXml() throws Exception {
+		if (Thread.interrupted()) {
+			return;
+		}
 		String tempPath = this.path + File.separator + "build.xml";
 		PrintWriter out = new PrintWriter(new File(tempPath));
 
@@ -818,10 +943,15 @@ public class Generator {
 		out.println("</project>");
 
 		out.close();
+		
+		ProgressMessage.message = "Created build.xml";
 	}
 
 	// Create outer dirs
 	private void createDirs() throws Exception {
+		if (Thread.interrupted()) {
+			return;
+		}
 		String tempPath = this.path;
 		tempPath += File.separator;
 
@@ -907,6 +1037,21 @@ public class Generator {
 		file = new File(packageString);
 		if (!file.mkdirs()) {
 			throw new Exception("Failed to make directories for package");
+		}
+		
+		ProgressMessage.message = "Created directories";
+	}
+
+	@Override
+	public void run() {
+		try {
+			startGenerator();
+			
+			if (Thread.interrupted()) {
+				return;
+			}
+		} catch (Exception e) {
+			ProgressMessage.message = e.getMessage();
 		}
 	}
 }

@@ -16,7 +16,28 @@ and not the boilerplate code that is required to make a Kettle plugin work. Belo
 
 ![Auto generated Code](http://abhi.am/wp-content/uploads/2014/11/Screen-Shot-2014-11-09-at-5.18.34-PM.png)
 
-If you are on a Mac, make sure to run it with the -XstartOnFirstThread flag to avoid "Invalid thread access" error.
+How to use it
+=============
 
-Make sure to re-compile the code with SWT for your architecture.
+Clone the code.
 
+Open up pom.xml and replace the SWT library for your architecture.
+
+Run the package goal.
+
+If you are on OSX, make sure to run the jar with the -XstartOnFirstThread flag to avoid "Invalid thread access" error.
+
+Managing dependencies using S3
+==============================
+
+The generator now has a feature where you can upload your dependencies to two S3 buckets (for libext and libswt) and it can download and 
+copy the artifacts while generating code. To do that put a file called config.json in the same directory as the jar, containing the AWS configuration in the following format:
+
+{
+	"accessKey" : "xxxx",
+	"secretKey" : "xxxx",
+	"libext" : "bucketname",
+	"libswt" : "bucketname"
+}
+
+This step is optional and if the program can't find the configuration file, it will ignore that step.
