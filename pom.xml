@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>am.abhi.utils</groupId>
 	<artifactId>kettlecodegen</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.1</version>
 	<name>Kettlecodegen</name>
 	<description>Kettle code generator</description>
 
